@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .w-13 { width: 3.25rem; }
+  .h-18 { height: 4.5rem; }
+  .h-22 { height: 5.5rem; }
+  .w-16 { width: 4rem; }
+}
