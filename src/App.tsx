@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Tile, Phase, Furo } from '@/types';
-import { initGame, createDeck, shuffle, sortHand, checkWinConcealed, canRonConcealed, findNakiOptions, findAnkanOptions, findKakanOptions, isMenzen as isMenzenLogic, canRiichi as canRiichiLogic, validRiichiDiscards, sameTile, getWaits, isFuriten, NakiOption } from '@/gameLogic';
+import { initGame, createDeck, shuffle, sortHand, checkWinConcealed, canRonConcealed, findNakiOptions, findAnkanOptions, findKakanOptions, isMenzen as isMenzenLogic, canRiichi as canRiichiLogic, validRiichiDiscards, sameTile, NakiOption } from '@/gameLogic';
 import TileCard from '@/components/TileCard';
 import { RefreshCw, Trophy, Hand, X, Layers, Undo2, Redo2, Undo, Zap, Bug } from 'lucide-react';
 
@@ -27,7 +27,6 @@ interface State {
   winType: 'tsumo' | 'ron' | null;
   doraCount: number;
   isRiichi: boolean;
-  missedRonAfterRiichi: boolean;
 }
 
 type PlayerAction = 'passNaki' | 'callRon' | 'declareTsumo' | 'callNaki' | 'playerDiscard' | 'playerNakiDiscard';
@@ -87,7 +86,6 @@ function makeInitialStateBase(playerHand: Tile[], cpuHand: Tile[], wall: Tile[],
     lastCpuDiscard: null, nakiOptions: [], ronAvailable: false, winType: null,
     doraCount: 1,
     isRiichi: false,
-    missedRonAfterRiichi: false,
   };
 }
 
@@ -254,9 +252,7 @@ export default function App() {
       const cpuAfterDiscard = cur.cpuHand;
       const newCpuDiscards = [...cur.cpuDiscards, cpuDiscard];
 
-      const rawRon = canRonConcealed(cur.playerHand, cpuDiscard, cur.playerFuro.length);
-      const furiten = isFuriten(getWaits(cur.playerHand, cur.playerFuro), cur.playerDiscards);
-      const ron = rawRon && !furiten && !cur.missedRonAfterRiichi;
+      const ron = canRonConcealed(cur.playerHand, cpuDiscard, cur.playerFuro.length);
       const naki = cur.isRiichi ? [] : findNakiOptions(cur.playerHand, cpuDiscard);
 
       let newState: State;
@@ -451,12 +447,11 @@ export default function App() {
           setHistory(prev => {
             const cur = prev[historyIndex];
             if (!cur || cur.phase !== 'naki') return prev;
-            const missed = cur.isRiichi && cur.ronAvailable;
             let newState: State;
             if (cur.wall.length === 0) {
-              newState = { ...cur, phase: 'exhausted', nakiOptions: [], ronAvailable: false, missedRonAfterRiichi: cur.missedRonAfterRiichi || missed };
+              newState = { ...cur, phase: 'exhausted', nakiOptions: [], ronAvailable: false };
             } else {
-              newState = { ...cur, phase: 'playerDraw', nakiOptions: [], ronAvailable: false, lastCpuDiscard: null, missedRonAfterRiichi: cur.missedRonAfterRiichi || missed };
+              newState = { ...cur, phase: 'playerDraw', nakiOptions: [], ronAvailable: false, lastCpuDiscard: null };
             }
             const truncated = prev.slice(0, historyIndex + 1);
             return [...truncated, newState];
@@ -469,12 +464,11 @@ export default function App() {
     setHistory(prev => {
       const cur = prev[historyIndex];
       if (!cur || cur.phase !== 'naki') return prev;
-      const missed = cur.isRiichi && cur.ronAvailable;
       let newState: State;
       if (cur.wall.length === 0) {
-        newState = { ...cur, phase: 'exhausted', nakiOptions: [], ronAvailable: false, missedRonAfterRiichi: cur.missedRonAfterRiichi || missed };
+        newState = { ...cur, phase: 'exhausted', nakiOptions: [], ronAvailable: false };
       } else {
-        newState = { ...cur, phase: 'playerDraw', nakiOptions: [], ronAvailable: false, lastCpuDiscard: null, missedRonAfterRiichi: cur.missedRonAfterRiichi || missed };
+        newState = { ...cur, phase: 'playerDraw', nakiOptions: [], ronAvailable: false, lastCpuDiscard: null };
       }
       const truncated = prev.slice(0, historyIndex + 1);
       return [...truncated, newState];
