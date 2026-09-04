@@ -140,6 +140,30 @@ export function canRonConcealed(hand: Tile[], discard: Tile, numFuro: number): b
   return checkWinConcealed([...hand, discard], numFuro);
 }
 
+export function getWaits(hand: Tile[], furoList: Furo[]): Tile[] {
+  const waits: Tile[] = [];
+  const suits = ['man', 'pin', 'sou'] as const;
+  for (const suit of suits) {
+    for (let v = 1; v <= 9; v++) {
+      const t: Tile = { id: 'test', suit, value: v };
+      if (canRonConcealed(hand, t, furoList.length)) waits.push(t);
+    }
+  }
+  for (let v = 1; v <= 4; v++) {
+    const t: Tile = { id: 'test', suit: 'wind', value: v };
+    if (canRonConcealed(hand, t, furoList.length)) waits.push(t);
+  }
+  for (let v = 1; v <= 3; v++) {
+    const t: Tile = { id: 'test', suit: 'dragon', value: v };
+    if (canRonConcealed(hand, t, furoList.length)) waits.push(t);
+  }
+  return waits;
+}
+
+export function isFuriten(waits: Tile[], discards: Tile[]): boolean {
+  return waits.some(w => discards.some(d => sameTile(w, d)));
+}
+
 export function checkTenpai(hand: Tile[], numFuro: number): boolean {
   const expectedLen = 13 - 3 * numFuro;
   if (hand.length !== expectedLen) return false;

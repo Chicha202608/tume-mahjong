@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Tile, Phase, Furo } from '@/types';
-import { initGame, createDeck, shuffle, sortHand, checkWinConcealed, canRonConcealed, findNakiOptions, findAnkanOptions, findKakanOptions, isMenzen as isMenzenLogic, canRiichi as canRiichiLogic, validRiichiDiscards, sameTile, NakiOption } from '@/gameLogic';
+import { initGame, createDeck, shuffle, sortHand, checkWinConcealed, canRonConcealed, findNakiOptions, findAnkanOptions, findKakanOptions, isMenzen as isMenzenLogic, canRiichi as canRiichiLogic, validRiichiDiscards, sameTile, getWaits, isFuriten, NakiOption } from '@/gameLogic';
 import TileCard from '@/components/TileCard';
 import { RefreshCw, Trophy, Hand, X, Layers, Undo2, Redo2, Undo, Zap, Bug } from 'lucide-react';
 
@@ -27,12 +27,14 @@ interface State {
   winType: 'tsumo' | 'ron' | null;
   doraCount: number;
   isRiichi: boolean;
+  tsumoAvailable: boolean;
+  missedRonAfterRiichi: boolean;
 }
 
-type PlayerAction = 'passNaki' | 'callRon' | 'declareTsumo' | 'callNaki' | 'playerDiscard' | 'playerNakiDiscard';
+type PlayerAction = 'passNaki' | 'passTsumo' | 'callRon' | 'declareTsumo' | 'callNaki' | 'playerDiscard' | 'playerNakiDiscard';
 
 function isStopState(s: State): boolean {
-  return s.phase === 'playerDiscard' || s.phase === 'riichiSelect' || s.phase === 'naki' || s.phase === 'playerNakiDiscard' || s.phase === 'win' || s.phase === 'exhausted';
+  return s.phase === 'playerDiscard' || s.phase === 'riichiSelect' || s.phase === 'naki' || s.phase === 'playerNakiDiscard' || s.phase === 'win' || s.phase === 'exhausted' || s.tsumoAvailable;
 }
 
 function actionMatchesNext(
@@ -46,6 +48,8 @@ function actionMatchesNext(
   switch (action) {
     case 'passNaki':
       return (next.phase === 'playerDraw' || next.phase === 'exhausted') && next.nakiOptions.length === 0 && !next.ronAvailable;
+    case 'passTsumo':
+      return next.phase === 'playerDiscard' && !next.tsumoAvailable;
     case 'callRon':
       return next.phase === 'win' && next.winType === 'ron';
     case 'declareTsumo':
@@ -86,6 +90,8 @@ function makeInitialStateBase(playerHand: Tile[], cpuHand: Tile[], wall: Tile[],
     lastCpuDiscard: null, nakiOptions: [], ronAvailable: false, winType: null,
     doraCount: 1,
     isRiichi: false,
+    tsumoAvailable: false,
+    missedRonAfterRiichi: false,
   };
 }
 
@@ -175,8 +181,8 @@ export default function App() {
         playerDrawnTile: drawn,
         wall: rest,
         wallDrawnCount: cur.wallDrawnCount + 1,
-        phase: won ? 'win' : 'playerDiscard',
-        winType: won ? 'tsumo' : null,
+        phase: 'playerDiscard',
+        tsumoAvailable: won,
       };
       const truncated = prev.slice(0, historyIndex + 1);
       return [...truncated, newState];
@@ -252,7 +258,9 @@ export default function App() {
       const cpuAfterDiscard = cur.cpuHand;
       const newCpuDiscards = [...cur.cpuDiscards, cpuDiscard];
 
-      const ron = canRonConcealed(cur.playerHand, cpuDiscard, cur.playerFuro.length);
+      const rawRon = canRonConcealed(cur.playerHand, cpuDiscard, cur.playerFuro.length);
+      const furiten = isFuriten(getWaits(cur.playerHand, cur.playerFuro), cur.playerDiscards);
+      const ron = rawRon && !furiten && !cur.missedRonAfterRiichi;
       const naki = cur.isRiichi ? [] : findNakiOptions(cur.playerHand, cpuDiscard);
 
       let newState: State;
@@ -291,14 +299,11 @@ export default function App() {
       timeoutRef.current = setTimeout(() => playerDraw(), 500);
       return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
     }
-    if (state.phase === 'playerDiscard' && state.isRiichi && state.playerDrawnTile && !isViewingPast) {
-      const won = checkWinConcealed([...state.playerHand, state.playerDrawnTile], state.playerFuro.length);
-      if (!won) {
-        timeoutRef.current = setTimeout(() => playerDiscard(state.playerDrawnTile!), 700);
-        return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
-      }
+    if (state.phase === 'playerDiscard' && state.isRiichi && state.playerDrawnTile && !state.tsumoAvailable && !isViewingPast) {
+      timeoutRef.current = setTimeout(() => playerDiscard(state.playerDrawnTile!), 700);
+      return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
     }
-  }, [state.phase, state.wall.length, state.isRiichi, state.playerDrawnTile, state.playerHand, state.playerFuro, cpuTurn, playerDraw, playerDiscard, isViewingPast, historyIndex, history.length]);
+  }, [state.phase, state.wall.length, state.isRiichi, state.playerDrawnTile, state.tsumoAvailable, state.playerHand, state.playerFuro, cpuTurn, playerDraw, playerDiscard, isViewingPast, historyIndex, history.length]);
 
   const callRon = useCallback(() => {
     if (isViewingPast) {
@@ -447,11 +452,12 @@ export default function App() {
           setHistory(prev => {
             const cur = prev[historyIndex];
             if (!cur || cur.phase !== 'naki') return prev;
+            const missed = cur.isRiichi && cur.ronAvailable;
             let newState: State;
             if (cur.wall.length === 0) {
-              newState = { ...cur, phase: 'exhausted', nakiOptions: [], ronAvailable: false };
+              newState = { ...cur, phase: 'exhausted', nakiOptions: [], ronAvailable: false, missedRonAfterRiichi: cur.missedRonAfterRiichi || missed };
             } else {
-              newState = { ...cur, phase: 'playerDraw', nakiOptions: [], ronAvailable: false, lastCpuDiscard: null };
+              newState = { ...cur, phase: 'playerDraw', nakiOptions: [], ronAvailable: false, lastCpuDiscard: null, missedRonAfterRiichi: cur.missedRonAfterRiichi || missed };
             }
             const truncated = prev.slice(0, historyIndex + 1);
             return [...truncated, newState];
@@ -464,12 +470,46 @@ export default function App() {
     setHistory(prev => {
       const cur = prev[historyIndex];
       if (!cur || cur.phase !== 'naki') return prev;
+      const missed = cur.isRiichi && cur.ronAvailable;
       let newState: State;
       if (cur.wall.length === 0) {
-        newState = { ...cur, phase: 'exhausted', nakiOptions: [], ronAvailable: false };
+        newState = { ...cur, phase: 'exhausted', nakiOptions: [], ronAvailable: false, missedRonAfterRiichi: cur.missedRonAfterRiichi || missed };
       } else {
-        newState = { ...cur, phase: 'playerDraw', nakiOptions: [], ronAvailable: false, lastCpuDiscard: null };
+        newState = { ...cur, phase: 'playerDraw', nakiOptions: [], ronAvailable: false, lastCpuDiscard: null, missedRonAfterRiichi: cur.missedRonAfterRiichi || missed };
       }
+      const truncated = prev.slice(0, historyIndex + 1);
+      return [...truncated, newState];
+    });
+    setHistoryIndex(prev => prev + 1);
+  }, [historyIndex, isViewingPast, history]);
+
+  const passTsumo = useCallback(() => {
+    if (isViewingPast) {
+      const cur = history[historyIndex];
+      const next = history[historyIndex + 1];
+      if (cur && next && actionMatchesNext(cur, next, 'passTsumo')) {
+        setHistoryIndex(prev => prev + 1);
+        return;
+      }
+      setPendingAction({
+        message: 'これ以降の牌譜は消去されますが、よろしいですか？',
+        action: () => {
+          setHistory(prev => {
+            const cur = prev[historyIndex];
+            if (!cur || !cur.tsumoAvailable) return prev;
+            const newState: State = { ...cur, tsumoAvailable: false };
+            const truncated = prev.slice(0, historyIndex + 1);
+            return [...truncated, newState];
+          });
+          setHistoryIndex(prev => prev + 1);
+        },
+      });
+      return;
+    }
+    setHistory(prev => {
+      const cur = prev[historyIndex];
+      if (!cur || !cur.tsumoAvailable) return prev;
+      const newState: State = { ...cur, tsumoAvailable: false };
       const truncated = prev.slice(0, historyIndex + 1);
       return [...truncated, newState];
     });
@@ -489,8 +529,8 @@ export default function App() {
         action: () => {
           setHistory(prev => {
             const cur = prev[historyIndex];
-            if (!cur) return prev;
-            const newState = { ...cur, phase: 'win' as Phase, winType: 'tsumo' as const };
+            if (!cur || !cur.tsumoAvailable) return prev;
+            const newState = { ...cur, phase: 'win' as Phase, winType: 'tsumo' as const, tsumoAvailable: false };
             const truncated = prev.slice(0, historyIndex + 1);
             return [...truncated, newState];
           });
@@ -501,8 +541,8 @@ export default function App() {
     }
     setHistory(prev => {
       const cur = prev[historyIndex];
-      if (!cur) return prev;
-      const newState = { ...cur, phase: 'win' as Phase, winType: 'tsumo' as const };
+      if (!cur || !cur.tsumoAvailable) return prev;
+      const newState = { ...cur, phase: 'win' as Phase, winType: 'tsumo' as const, tsumoAvailable: false };
       const truncated = prev.slice(0, historyIndex + 1);
       return [...truncated, newState];
     });
@@ -593,8 +633,8 @@ export default function App() {
         wall: newWall,
         wanpai: newWanpai,
         doraCount: newDoraCount,
-        phase: won ? 'win' : 'playerDiscard',
-        winType: won ? ('tsumo' as const) : null,
+        phase: 'playerDiscard',
+        tsumoAvailable: won,
         nakiOptions: [],
         ronAvailable: false,
         lastCpuDiscard: null,
@@ -764,9 +804,9 @@ export default function App() {
     setPendingAction(null);
   }, []);
 
-  const { playerHand, playerDrawnTile, cpuHand, wall, fullWall, wallDrawnCount, wanpai, playerDiscards, cpuDiscards, playerFuro, phase, turnCount, lastCpuDiscard, nakiOptions, ronAvailable, winType, doraCount, isRiichi } = state;
+  const { playerHand, playerDrawnTile, cpuHand, wall, fullWall, wallDrawnCount, wanpai, playerDiscards, cpuDiscards, playerFuro, phase, turnCount, lastCpuDiscard, nakiOptions, ronAvailable, winType, doraCount, isRiichi, tsumoAvailable } = state;
 
-  const canTsumo = playerDrawnTile && checkWinConcealed([...playerHand, playerDrawnTile], playerFuro.length);
+  const canTsumo = tsumoAvailable;
   const ankanOptions = playerDrawnTile ? findAnkanOptions(playerHand, playerDrawnTile) : [];
   const kakanOptions = playerDrawnTile ? findKakanOptions(playerHand, playerDrawnTile, playerFuro) : [];
 
@@ -1051,14 +1091,15 @@ export default function App() {
               onClick={passNaki}
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gray-600 hover:bg-gray-500 active:scale-95 text-white font-bold text-base transition-all shadow-lg"
             >
-              スルー
+              <X size={18} />
+              キャンセル
             </button>
           </div>
         )}
 
         {/* Status bar */}
         <div className="px-4 py-2 bg-[#1a2e1a]">
-          <StatusBar phase={phase} wallCount={wall.length} isViewingPast={isViewingPast} />
+          <StatusBar phase={phase} wallCount={wall.length} isViewingPast={isViewingPast} tsumoAvailable={tsumoAvailable} />
         </div>
 
         {/* Hand section */}
@@ -1081,7 +1122,16 @@ export default function App() {
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-yellow-500 hover:bg-yellow-400 active:scale-95 text-yellow-900 font-bold text-sm transition-all shadow-md animate-pulse"
               >
                 <Trophy size={14} />
-                ツモアガリ
+                ツモ
+              </button>
+            )}
+            {canTsumo && (
+              <button
+                onClick={passTsumo}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-500 active:scale-95 text-white font-bold text-sm transition-all shadow-md"
+              >
+                <X size={14} />
+                キャンセル
               </button>
             )}
             {canRiichi && !isViewingPast && (
@@ -1101,6 +1151,11 @@ export default function App() {
             {phase === 'playerDiscard' && !canTsumo && !isViewingPast && (
               <span className="text-amber-400 font-normal normal-case text-xs animate-pulse">
                 捨てる牌をクリック
+              </span>
+            )}
+            {canTsumo && !isViewingPast && (
+              <span className="text-yellow-400 font-normal normal-case text-xs animate-pulse">
+                ツモ和了可能 — ツモ or キャンセル
               </span>
             )}
             {phase === 'playerNakiDiscard' && !isViewingPast && (
@@ -1332,9 +1387,12 @@ function MiniTile({ tile }: { tile: Tile }) {
   );
 }
 
-function StatusBar({ phase, wallCount, isViewingPast }: { phase: Phase; wallCount: number; isViewingPast: boolean }) {
+function StatusBar({ phase, wallCount, isViewingPast, tsumoAvailable }: { phase: Phase; wallCount: number; isViewingPast: boolean; tsumoAvailable: boolean }) {
   if (isViewingPast) {
     return <p className="text-sm text-center text-amber-300">牌譜閲覧中</p>;
+  }
+  if (tsumoAvailable) {
+    return <p className="text-sm text-center text-yellow-300 animate-pulse">ツモ和了可能 — ツモ or キャンセル</p>;
   }
   const messages: Record<string, string> = {
     playerDraw: wallCount > 0 ? 'ツモ中...' : '山牌がなくなりました',
