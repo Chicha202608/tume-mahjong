@@ -822,7 +822,7 @@ export default function App() {
           <div className="w-8 h-8 rounded-full bg-green-700 flex items-center justify-center">
             <span className="text-white font-black text-sm">麻</span>
           </div>
-          <h1 className="text-white font-bold text-xl tracking-wide">麻雀ソリティア</h1>
+          <h1 className="text-white font-bold text-xl tracking-wide">詰め麻雀</h1>
         </div>
         <div className="flex items-center gap-3 text-sm text-green-300">
           {isViewingPast && (
