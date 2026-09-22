@@ -1174,43 +1174,44 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2 items-end">
-            {playerHand.map(tile => {
-              const isRiichiInvalid = phase === 'riichiSelect' && !riichiValidTiles.has(tile.id);
-              return (
-                <TileCard
-                  key={tile.id}
-                  tile={tile}
-                  size="lg"
-                  dora={isDora(tile)}
-                  className={isRiichiInvalid ? 'opacity-30 grayscale pointer-events-none' : ''}
-                  onClick={
-                    phase === 'playerDiscard' ? () => playerDiscard(tile) :
-                    phase === 'playerNakiDiscard' ? () => playerNakiDiscard(tile) :
-                    phase === 'riichiSelect' && !isRiichiInvalid ? () => riichiDiscard(tile) :
-                    undefined
-                  }
-                />
-              );
-            })}
-            {playerDrawnTile && (
-              <div className="ml-4">
-                <TileCard
-                  tile={playerDrawnTile}
-                  size="lg"
-                  highlighted
-                  dora={isDora(playerDrawnTile)}
-                  className={phase === 'riichiSelect' && !riichiValidTiles.has(playerDrawnTile.id) ? 'opacity-30 grayscale pointer-events-none' : ''}
-                  onClick={
-                    phase === 'playerDiscard' ? () => playerDiscard(playerDrawnTile) :
-                    phase === 'playerNakiDiscard' ? () => playerNakiDiscard(playerDrawnTile) :
-                    phase === 'riichiSelect' && riichiValidTiles.has(playerDrawnTile.id) ? () => riichiDiscard(playerDrawnTile) :
-                    undefined
-                  }
-                />
-              </div>
-            )}
-          </div>
+          <div className="flex flex-nowrap justify-center items-end gap-1 w-full max-w-full overflow-hidden">
+  {playerHand.map(tile => {
+    const isRiichiInvalid = phase === 'riichiSelect' && !riichiValidTiles.has(tile.id);
+    return (
+      <div key={tile.id} className="flex-shrink min-w-0 flex-1 max-w-[56px]">
+        <TileCard
+          tile={tile}
+          size="lg"
+          dora={isDora(tile)}
+          className={`w-full h-auto ${isRiichiInvalid ? 'opacity-30 grayscale pointer-events-none' : ''}`}
+          onClick={
+            phase === 'playerDiscard' ? () => playerDiscard(tile) :
+            phase === 'playerNakiDiscard' ? () => playerNakiDiscard(tile) :
+            phase === 'riichiSelect' && !isRiichiInvalid ? () => riichiDiscard(tile) :
+            undefined
+          }
+        />
+      </div>
+    );
+  })}
+  {playerDrawnTile && (
+    <div className="ml-2 flex-shrink min-w-0 flex-1 max-w-[56px]">
+      <TileCard
+        tile={playerDrawnTile}
+        size="lg"
+        highlighted
+        dora={isDora(playerDrawnTile)}
+        className={`w-full h-auto ${phase === 'riichiSelect' && !riichiValidTiles.has(playerDrawnTile.id) ? 'opacity-30 grayscale pointer-events-none' : ''}`}
+        onClick={
+          phase === 'playerDiscard' ? () => playerDiscard(playerDrawnTile) :
+          phase === 'playerNakiDiscard' ? () => playerNakiDiscard(playerDrawnTile) :
+          phase === 'riichiSelect' && riichiValidTiles.has(playerDrawnTile.id) ? () => riichiDiscard(playerDrawnTile) :
+          undefined
+        }
+      />
+    </div>
+  )}
+</div>
         </section>
       </div>
 
