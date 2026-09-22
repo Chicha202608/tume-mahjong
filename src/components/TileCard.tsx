@@ -9,6 +9,7 @@ interface Props {
   highlighted?: boolean;
   faceDown?: boolean;
   rotated?: boolean;
+  dora?: boolean;
   className?: string;
 }
 
@@ -19,9 +20,10 @@ const sizeMap = {
   lg: { outer: 'w-16 h-22', w: 64, h: 88, shadow: '2px 4px 0 #989898' },
 };
 
-export default function TileCard({ tile, size = 'md', onClick, highlighted, faceDown, rotated, className = '' }: Props) {
+export default function TileCard({ tile, size = 'md', onClick, highlighted, faceDown, rotated, dora, className = '' }: Props) {
   const { label } = tileDisplay(tile);
   const { outer, w, h, shadow } = sizeMap[size];
+  const showShimmer = dora && !faceDown;
 
   const base =
     'relative flex flex-col items-center justify-center rounded-md select-none transition-all duration-150 overflow-hidden bg-[#f8f4e8] border border-[#d0c8b0]';
@@ -41,10 +43,11 @@ export default function TileCard({ tile, size = 'md', onClick, highlighted, face
           onClick={onClick}
           title={label}
         >
+          {showShimmer && <div className="dora-shimmer-overlay" />}
           <img
             src={faceDown ? tileBackUrl() : tileImageUrl(tile)}
             alt={label}
-            className="w-full h-full object-contain pointer-events-none"
+            className="w-full h-full object-contain pointer-events-none relative z-0"
             draggable={false}
           />
         </div>
@@ -59,10 +62,11 @@ export default function TileCard({ tile, size = 'md', onClick, highlighted, face
       onClick={onClick}
       title={label}
     >
+      {showShimmer && <div className="dora-shimmer-overlay" />}
       <img
         src={faceDown ? tileBackUrl() : tileImageUrl(tile)}
         alt={label}
-        className="w-full h-full object-contain pointer-events-none"
+        className="w-full h-full object-contain pointer-events-none relative z-0"
         draggable={false}
       />
     </div>

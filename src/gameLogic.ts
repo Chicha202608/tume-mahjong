@@ -160,6 +160,28 @@ export function getWaits(hand: Tile[], furoList: Furo[]): Tile[] {
   return waits;
 }
 
+export function nextDoraTile(indicator: Tile): Tile {
+  const { suit, value } = indicator;
+  if (suit === 'man' || suit === 'pin' || suit === 'sou') {
+    return { id: 'dora', suit, value: value === 9 ? 1 : value + 1 };
+  }
+  if (suit === 'wind') {
+    return { id: 'dora', suit, value: value === 4 ? 1 : value + 1 };
+  }
+  return { id: 'dora', suit, value: value === 3 ? 1 : value + 1 };
+}
+
+export function getDoraTileKeys(wanpai: Tile[], doraCount: number): Set<string> {
+  const keys = new Set<string>();
+  for (let i = 0; i < doraCount && i < 5; i++) {
+    const indicator = wanpai[4 + i];
+    if (!indicator) continue;
+    const dora = nextDoraTile(indicator);
+    keys.add(`${dora.suit}-${dora.value}`);
+  }
+  return keys;
+}
+
 export function isFuriten(waits: Tile[], discards: Tile[]): boolean {
   return waits.some(w => discards.some(d => sameTile(w, d)));
 }

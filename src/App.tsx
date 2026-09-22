@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Tile, Phase, Furo } from '@/types';
-import { initGame, createDeck, shuffle, sortHand, checkWinConcealed, canRonConcealed, findNakiOptions, findAnkanOptions, findKakanOptions, isMenzen as isMenzenLogic, canRiichi as canRiichiLogic, validRiichiDiscards, sameTile, getWaits, isFuriten, NakiOption } from '@/gameLogic';
+import { initGame, createDeck, shuffle, sortHand, checkWinConcealed, canRonConcealed, findNakiOptions, findAnkanOptions, findKakanOptions, isMenzen as isMenzenLogic, canRiichi as canRiichiLogic, validRiichiDiscards, sameTile, getWaits, isFuriten, getDoraTileKeys, NakiOption } from '@/gameLogic';
 import TileCard from '@/components/TileCard';
 import { RefreshCw, Trophy, Hand, X, Layers, Undo2, Redo2, Undo, Zap, Bug } from 'lucide-react';
 
@@ -813,6 +813,8 @@ export default function App() {
   const isMenzen = isMenzenLogic(playerFuro);
   const canRiichi = !isRiichi && isMenzen && phase === 'playerDiscard' && playerDrawnTile && canRiichiLogic(playerHand, playerDrawnTile, playerFuro);
   const riichiValidTiles = phase === 'riichiSelect' && playerDrawnTile ? validRiichiDiscards(playerHand, playerDrawnTile, playerFuro) : new Set<string>();
+  const doraKeys = getDoraTileKeys(wanpai, doraCount);
+  const isDora = (t: Tile) => doraKeys.has(`${t.suit}-${t.value}`);
 
   return (
     <div className="min-h-screen bg-[#1a2e1a] flex flex-col" style={{ fontFamily: "'Segoe UI', system-ui', sans-serif" }}>
@@ -996,7 +998,7 @@ export default function App() {
             <span className="text-green-600 text-xs">自分の捨て牌: </span>
             <div className="inline-flex flex-wrap gap-0.5 mt-1">
               {playerDiscards.map(tile => (
-                <TileCard key={tile.id} tile={tile} size="xs" />
+                <TileCard key={tile.id} tile={tile} size="xs" dora={isDora(tile)} />
               ))}
             </div>
           </section>
@@ -1016,6 +1018,7 @@ export default function App() {
                           key={t.id}
                           tile={t}
                           size="sm"
+                          dora={isDora(t)}
                           faceDown={idx === 0 || idx === 3}
                         />
                       ))}
@@ -1031,12 +1034,12 @@ export default function App() {
                         if (isCalled) {
                           return (
                             <div key={t.id} className="flex flex-col gap-0">
-                              <TileCard tile={extraTile} size="sm" rotated />
-                              <TileCard tile={t} size="sm" rotated />
+                              <TileCard tile={extraTile} size="sm" rotated dora={isDora(extraTile)} />
+                              <TileCard tile={t} size="sm" rotated dora={isDora(t)} />
                             </div>
                           );
                         }
-                        return <TileCard key={t.id} tile={t} size="sm" />;
+                        return <TileCard key={t.id} tile={t} size="sm" dora={isDora(t)} />;
                       })}
                     </div>
                   );
@@ -1048,6 +1051,7 @@ export default function App() {
                         key={t.id}
                         tile={t}
                         size="sm"
+                        dora={isDora(t)}
                         rotated={t.id === f.calledTile.id}
                       />
                     ))}
@@ -1178,6 +1182,7 @@ export default function App() {
                   key={tile.id}
                   tile={tile}
                   size="lg"
+                  dora={isDora(tile)}
                   className={isRiichiInvalid ? 'opacity-30 grayscale pointer-events-none' : ''}
                   onClick={
                     phase === 'playerDiscard' ? () => playerDiscard(tile) :
@@ -1194,6 +1199,7 @@ export default function App() {
                   tile={playerDrawnTile}
                   size="lg"
                   highlighted
+                  dora={isDora(playerDrawnTile)}
                   className={phase === 'riichiSelect' && !riichiValidTiles.has(playerDrawnTile.id) ? 'opacity-30 grayscale pointer-events-none' : ''}
                   onClick={
                     phase === 'playerDiscard' ? () => playerDiscard(playerDrawnTile) :
