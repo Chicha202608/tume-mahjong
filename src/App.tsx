@@ -853,7 +853,7 @@ export default function App() {
             return (
               <TileCard
                 key={i}
-                tile={wanpai[i * 2] ?? { id: `dummy-${i}`, suit: 'man', value: 1 }}
+                tile={wanpai[4 + i * 2] ?? { id: `dummy-${i}`, suit: 'man', value: 1 }}
                 size="sm"
                 faceDown={!isRevealed}
               />
