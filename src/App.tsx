@@ -1114,7 +1114,7 @@ export default function App() {
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-600 active:scale-95 text-white font-bold text-sm transition-all shadow-md"
             >
               <Layers size={14} />
-              ツモ山を確認
+              牌山を確認
             </button>
             {canTsumo && (
               <button
