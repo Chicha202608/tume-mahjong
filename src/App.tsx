@@ -817,7 +817,7 @@ export default function App() {
   const isDora = (t: Tile) => doraKeys.has(`${t.suit}-${t.value}`);
 
   return (
-    <div className="min-h-screen bg-[#1a2e1a] flex flex-col" style={{ fontFamily: "'Segoe UI', system-ui', sans-serif" }}>
+    <div className="min-h-screen bg-[#1a2e1a] -col" style={{ fontFamily: "'Segoe UI', system-ui', sans-serif" }}>
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-3 bg-[#0f1f0f] border-b border-[#2d4a2d]">
         <div className="flex items-center gap-3">
@@ -949,7 +949,7 @@ export default function App() {
         </button>
       </div>
 
-      <div className="flex flex-col flex-1 gap-0 overflow-hidden">
+      <div className="-col flex-1 gap-0 overflow-hidden">
         {/* CPU section */}
         <section className="px-4 py-3 bg-[#152615] border-b border-[#2d4a2d]">
           <div className="flex items-center justify-between mb-2">
@@ -958,14 +958,14 @@ export default function App() {
             </h2>
             <span className="text-green-600 text-xs">{cpuHand.length}枚</span>
           </div>
-          <div className="flex flex-wrap gap-1">
+          <div className="-wrap gap-1">
             {cpuHand.map((tile, idx) => (
               <TileCard key={tile.id ?? idx} tile={tile} size="sm" faceDown />
             ))}
           </div>
           {/* CPU furo */}
           {state.cpuFuro.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-3">
+            <div className="mt-2 -wrap gap-3">
               {state.cpuFuro.map((f, i) => (
                 <div key={i} className="flex gap-0.5 bg-[#0e1e0e] rounded p-1 items-center">
                   {f.tiles.map(t => (
@@ -978,7 +978,7 @@ export default function App() {
           {cpuDiscards.length > 0 && (
             <div className="mt-2">
               <span className="text-green-600 text-xs">捨て牌: </span>
-              <div className="inline-flex flex-wrap gap-0.5 mt-1">
+              <div className="inline--wrap gap-0.5 mt-1">
                 {cpuDiscards.map(tile => (
                   <TileCard
                     key={tile.id}
@@ -996,7 +996,7 @@ export default function App() {
         {playerDiscards.length > 0 && (
           <section className="px-4 py-2 bg-[#172917] border-b border-[#2d4a2d]">
             <span className="text-green-600 text-xs">自分の捨て牌: </span>
-            <div className="inline-flex flex-wrap gap-0.5 mt-1">
+            <div className="inline--wrap gap-0.5 mt-1">
               {playerDiscards.map(tile => (
                 <TileCard key={tile.id} tile={tile} size="xs" dora={isDora(tile)} />
               ))}
@@ -1008,7 +1008,7 @@ export default function App() {
         {playerFuro.length > 0 && (
           <section className="px-4 py-2 bg-[#1e3a1e] border-b border-[#2d4a2d]">
             <span className="text-amber-400 text-xs font-semibold">副露（晒し牌）: </span>
-            <div className="flex flex-wrap gap-3 mt-1">
+            <div className="-wrap gap-3 mt-1">
               {playerFuro.map((f, i) => {
                 if (f.type === 'ankan') {
                   return (
@@ -1033,7 +1033,7 @@ export default function App() {
                         const isCalled = t.id === f.calledTile.id;
                         if (isCalled) {
                           return (
-                            <div key={t.id} className="flex flex-col gap-0">
+                            <div key={t.id} className="-col gap-0">
                               <TileCard tile={extraTile} size="sm" rotated dora={isDora(extraTile)} />
                               <TileCard tile={t} size="sm" rotated dora={isDora(t)} />
                             </div>
@@ -1107,7 +1107,7 @@ export default function App() {
         </div>
 
         {/* Hand section */}
-        <section className="flex-1 flex flex-col items-center justify-center px-4 py-6">
+        <section className="flex-1 -col items-center justify-center px-4 py-6">
           <div className="flex items-center gap-3 mb-4 flex-wrap justify-center">
             <h2 className="text-green-400 text-sm font-semibold tracking-widest uppercase">
               手牌 — {playerHand.length}枚
@@ -1174,44 +1174,44 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex flex-nowrap justify-center items-end gap-1 w-full max-w-full overflow-hidden">
-  {playerHand.map(tile => {
-    const isRiichiInvalid = phase === 'riichiSelect' && !riichiValidTiles.has(tile.id);
-    return (
-      <div key={tile.id} className="flex-shrink min-w-0 flex-1 max-w-[56px]">
-        <TileCard
-          tile={tile}
-          size="lg"
-          dora={isDora(tile)}
-          className={`w-full h-auto ${isRiichiInvalid ? 'opacity-30 grayscale pointer-events-none' : ''}`}
-          onClick={
-            phase === 'playerDiscard' ? () => playerDiscard(tile) :
-            phase === 'playerNakiDiscard' ? () => playerNakiDiscard(tile) :
-            phase === 'riichiSelect' && !isRiichiInvalid ? () => riichiDiscard(tile) :
-            undefined
-          }
-        />
-      </div>
-    );
-  })}
-  {playerDrawnTile && (
-    <div className="ml-2 flex-shrink min-w-0 flex-1 max-w-[56px]">
-      <TileCard
-        tile={playerDrawnTile}
-        size="lg"
-        highlighted
-        dora={isDora(playerDrawnTile)}
-        className={`w-full h-auto ${phase === 'riichiSelect' && !riichiValidTiles.has(playerDrawnTile.id) ? 'opacity-30 grayscale pointer-events-none' : ''}`}
-        onClick={
-          phase === 'playerDiscard' ? () => playerDiscard(playerDrawnTile) :
-          phase === 'playerNakiDiscard' ? () => playerNakiDiscard(playerDrawnTile) :
-          phase === 'riichiSelect' && riichiValidTiles.has(playerDrawnTile.id) ? () => riichiDiscard(playerDrawnTile) :
-          undefined
-        }
-      />
-    </div>
-  )}
-</div>
+          <div className="flex flex-nowrap justify-center items-end gap-0.5 sm:gap-1 w-full max-w-full overflow-hidden px-2">
+            {playerHand.map(tile => {
+              const isRiichiInvalid = phase === 'riichiSelect' && !riichiValidTiles.has(tile.id);
+              return (
+                <div key={tile.id} className="flex-1 min-w-0 max-w-[56px] flex justify-center">
+                  <TileCard
+                    tile={tile}
+                    size="lg"
+                    dora={isDora(tile)}
+                    className={`w-full max-w-full h-auto aspect-[3/4] object-contain ${isRiichiInvalid ? 'opacity-30 grayscale pointer-events-none' : ''}`}
+                    onClick={
+                      phase === 'playerDiscard' ? () => playerDiscard(tile) :
+                      phase === 'playerNakiDiscard' ? () => playerNakiDiscard(tile) :
+                      phase === 'riichiSelect' && !isRiichiInvalid ? () => riichiDiscard(tile) :
+                      undefined
+                    }
+                  />
+                </div>
+              );
+            })}
+            {playerDrawnTile && (
+              <div className="ml-2 sm:ml-4 flex-1 min-w-0 max-w-[56px] flex justify-center shrink-0">
+                <TileCard
+                  tile={playerDrawnTile}
+                  size="lg"
+                  highlighted
+                  dora={isDora(playerDrawnTile)}
+                  className={`w-full max-w-full h-auto aspect-[3/4] object-contain ${phase === 'riichiSelect' && !riichiValidTiles.has(playerDrawnTile.id) ? 'opacity-30 grayscale pointer-events-none' : ''}`}
+                  onClick={
+                    phase === 'playerDiscard' ? () => playerDiscard(playerDrawnTile) :
+                    phase === 'playerNakiDiscard' ? () => playerNakiDiscard(playerDrawnTile) :
+                    phase === 'riichiSelect' && riichiValidTiles.has(playerDrawnTile.id) ? () => riichiDiscard(playerDrawnTile) :
+                    undefined
+                  }
+                />
+              </div>
+            )}
+          </div>
         </section>
       </div>
 
