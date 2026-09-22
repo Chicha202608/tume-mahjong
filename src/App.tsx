@@ -958,18 +958,18 @@ export default function App() {
             </h2>
             <span className="text-green-600 text-xs">{cpuHand.length}枚</span>
           </div>
-          <div className="flex flex-nowrap justify-start items-center gap-0.5 sm:gap-1 w-full max-w-full overflow-hidden">
-  {cpuHand.map((tile, idx) => (
-    <div key={tile.id ?? idx} className="flex-1 min-w-0 max-w-[40px] flex justify-center">
-      <TileCard 
-        tile={tile} 
-        size="sm" 
-        faceDown 
-        className="w-full max-w-full h-auto aspect-[3/4] object-contain"
-      />
-    </div>
-  ))}
-</div>
+          <div className="flex flex-nowrap justify-start items-center gap-0.5 sm:gap-1 w-full max-w-full overflow-hidden px-2">
+            {cpuHand.map((tile, idx) => (
+              <div key={tile.id ?? idx} className="flex-1 min-w-0 max-w-[40px] flex justify-center aspect-[3/4]">
+                <TileCard 
+                  tile={tile} 
+                  size="sm" 
+                  faceDown 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            ))}
+          </div>
           {/* CPU furo */}
           {state.cpuFuro.length > 0 && (
             <div className="mt-2 -wrap gap-3">
@@ -1185,12 +1185,12 @@ export default function App() {
             {playerHand.map(tile => {
               const isRiichiInvalid = phase === 'riichiSelect' && !riichiValidTiles.has(tile.id);
               return (
-                <div key={tile.id} className="flex-1 min-w-0 max-w-[56px] flex justify-center">
+                <div key={tile.id} className="flex-1 min-w-0 max-w-[56px] flex justify-center aspect-[3/4]">
                   <TileCard
                     tile={tile}
                     size="lg"
                     dora={isDora(tile)}
-                    className={`w-full max-w-full h-auto aspect-[3/4] object-contain ${isRiichiInvalid ? 'opacity-30 grayscale pointer-events-none' : ''}`}
+                    className={`w-full h-full object-contain ${isRiichiInvalid ? 'opacity-30 grayscale pointer-events-none' : ''}`}
                     onClick={
                       phase === 'playerDiscard' ? () => playerDiscard(tile) :
                       phase === 'playerNakiDiscard' ? () => playerNakiDiscard(tile) :
@@ -1202,13 +1202,13 @@ export default function App() {
               );
             })}
             {playerDrawnTile && (
-              <div className="ml-2 sm:ml-4 flex-1 min-w-0 max-w-[56px] flex justify-center shrink-0">
+              <div className="ml-2 sm:ml-4 flex-1 min-w-0 max-w-[56px] flex justify-center aspect-[3/4] shrink-0">
                 <TileCard
                   tile={playerDrawnTile}
                   size="lg"
                   highlighted
                   dora={isDora(playerDrawnTile)}
-                  className={`w-full max-w-full h-auto aspect-[3/4] object-contain ${phase === 'riichiSelect' && !riichiValidTiles.has(playerDrawnTile.id) ? 'opacity-30 grayscale pointer-events-none' : ''}`}
+                  className={`w-full h-full object-contain ${phase === 'riichiSelect' && !riichiValidTiles.has(playerDrawnTile.id) ? 'opacity-30 grayscale pointer-events-none' : ''}`}
                   onClick={
                     phase === 'playerDiscard' ? () => playerDiscard(playerDrawnTile) :
                     phase === 'playerNakiDiscard' ? () => playerNakiDiscard(playerDrawnTile) :
