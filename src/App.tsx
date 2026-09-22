@@ -958,11 +958,18 @@ export default function App() {
             </h2>
             <span className="text-green-600 text-xs">{cpuHand.length}枚</span>
           </div>
-          <div className="-wrap gap-1">
-            {cpuHand.map((tile, idx) => (
-              <TileCard key={tile.id ?? idx} tile={tile} size="sm" faceDown />
-            ))}
-          </div>
+          <div className="flex flex-nowrap justify-start items-center gap-0.5 sm:gap-1 w-full max-w-full overflow-hidden">
+  {cpuHand.map((tile, idx) => (
+    <div key={tile.id ?? idx} className="flex-1 min-w-0 max-w-[40px] flex justify-center">
+      <TileCard 
+        tile={tile} 
+        size="sm" 
+        faceDown 
+        className="w-full max-w-full h-auto aspect-[3/4] object-contain"
+      />
+    </div>
+  ))}
+</div>
           {/* CPU furo */}
           {state.cpuFuro.length > 0 && (
             <div className="mt-2 -wrap gap-3">
