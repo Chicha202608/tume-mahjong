@@ -21,7 +21,7 @@
   left: 0;
   width: 200%;
   height: 100%;
-  background: linear-gradient(120deg, transparent 40%, rgba(255, 255, 255, 0.5) 50%, transparent 60%);
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%);
   pointer-events: none;
   animation: dora-shimmer 3s ease-in-out infinite;
   z-index: 1;
