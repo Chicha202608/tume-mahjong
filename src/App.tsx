@@ -98,6 +98,7 @@ function makeInitialStateBase(playerHand: Tile[], cpuHand: Tile[], wall: Tile[],
 export default function App() {
   const [history, setHistory] = useState<State[]>(() => [makeInitialState()]);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const canUndo = historyIndex > 1;
   const [showWall, setShowWall] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ action: () => void; message: string } | null>(null);
   const [dismissedIndex, setDismissedIndex] = useState(-1);
@@ -899,9 +900,7 @@ export default function App() {
       <div className="text-yellow-400 text-xs text-center bg-black/50 py-1">
         DEBUG - historyIndex: {historyIndex} / historyLength: {history.length}
       </div>
-      // 配牌直後や第一ツモ時点（初手打牌前）では戻れないようにする判定
-      // ※ index 0: 配牌完了, index 1: 第一ツモ完了 の場合、index 2 以降で有効化
-      const canUndo = historyIndex > 1;
+      
       {/* History controls */}
       <div className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0f1f0f] border-b border-[#2d4a2d]">
         <button
