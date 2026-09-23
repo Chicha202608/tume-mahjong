@@ -895,12 +895,7 @@ export default function App() {
           </div>
         )}
       </div>
-
-      {/* デバッグ用の画面表示（確認後に削除） */}
-      <div className="text-yellow-400 text-xs text-center bg-black/50 py-1">
-        DEBUG - historyIndex: {historyIndex} / historyLength: {history.length}
-      </div>
-      
+          
       {/* History controls */}
       <div className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0f1f0f] border-b border-[#2d4a2d]">
         <button
