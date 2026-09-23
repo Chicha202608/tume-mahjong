@@ -7,6 +7,8 @@ import { RefreshCw, Trophy, Hand, X, Layers, Undo2, Redo2, Undo, Zap, Bug } from
 const MAX_DRAWS = 18;
 const WANPAI_COUNT = 14;
 
+console.log('HISTORY_DEBUG:', { historyIndex, historyLength: history?.length });
+
 interface State {
   playerHand: Tile[];
   playerDrawnTile: Tile | null;
@@ -895,8 +897,6 @@ export default function App() {
         )}
       </div>
       
-      // デバッグ用ログ
-      console.log('Current historyIndex:', historyIndex, 'History Length:', history.length);
       // 配牌直後や第一ツモ時点（初手打牌前）では戻れないようにする判定
       // ※ index 0: 配牌完了, index 1: 第一ツモ完了 の場合、index 2 以降で有効化
       const canUndo = historyIndex > 1;
