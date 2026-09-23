@@ -895,11 +895,14 @@ export default function App() {
         )}
       </div>
 
+      // 配牌直後や第一ツモ時点（初手打牌前）では戻れないようにする判定
+      // ※ index 0: 配牌完了, index 1: 第一ツモ完了 の場合、index 2 以降で有効化
+      const canUndo = historyIndex > 1;
       {/* History controls */}
       <div className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0f1f0f] border-b border-[#2d4a2d]">
         <button
           onClick={matta}
-          disabled={historyIndex === 0}
+          disabled={!canUndo}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-orange-700 hover:bg-orange-600 active:scale-95 text-white text-sm font-bold transition-all shadow-md disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <Undo size={14} />
@@ -907,7 +910,7 @@ export default function App() {
         </button>
         <button
           onClick={stepBack}
-          disabled={historyIndex === 0}
+          disabled={!canUndo}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gray-700 hover:bg-gray-600 active:scale-95 text-white text-sm font-bold transition-all shadow-md disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <Undo2 size={14} />
@@ -922,7 +925,6 @@ export default function App() {
           1手進む
         </button>
       </div>
-
       {/* Debug test buttons */}
       <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-[#0a1a0a] border-b border-[#2d4a2d]">
         <span className="text-gray-500 text-xs font-semibold flex items-center gap-1">
